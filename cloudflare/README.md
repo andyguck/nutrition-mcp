@@ -78,7 +78,7 @@ Authenticate on the host and confirm the target account:
 npx wrangler login
 npx wrangler whoami
 npx wrangler d1 create myfood-nutrition
-npx wrangler kv namespace create OAUTH_KV
+npx wrangler kv namespace create myfood-mcp-OAUTH_KV --binding OAUTH_KV
 ```
 
 Record the returned D1 `database_id` and KV `id` in the respective bindings in `wrangler.jsonc`. Preserve binding names `DB` and `OAUTH_KV`. Reuse the existing resources for subsequent deployments; creating new ones would point the service at an empty diary/token store. The custom domain in this config lets Wrangler provision the Worker hostname in the account's active zone. [Custom domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)

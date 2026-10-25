@@ -16,9 +16,10 @@
   "d1_databases": [{
     "binding": "DB",
     "database_name": "myfood-nutrition",
+    "database_id": "43205aa1-cdef-4dc9-8f75-ff6c61575b7b",
     "migrations_dir": "migrations"
   }],
-  "kv_namespaces": [{ "binding": "OAUTH_KV" }],
+  "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "6c56c5b4d9884f19a8c55dc3caab82b9" }],
   "ratelimits": [{
     "name": "AUTH_RATE_LIMIT",
     "namespace_id": "154103",
