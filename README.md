@@ -1,4 +1,18 @@
-# Nutrition MCP
+# My Food Tracker — Cloudflare fork
+
+This fork adds an independent Cloudflare Worker in [`cloudflare/`](cloudflare/README.md)
+for a private household food diary connected to ChatGPT. It uses D1 for food
+records and Cloudflare Access email PIN plus MCP OAuth for separate accounts.
+The intended endpoint is `https://myfood.andyguck.com/mcp`.
+
+Start with the [Cloudflare setup and validation guide](cloudflare/README.md).
+That package implements meal logging, corrections, history, summaries, daily
+goals, timezone preferences, and paginated JSON export. It does not yet implement
+the upstream widgets, food databases, saved meals, hydration, weight, or Apple
+Health integration. The original MIT-licensed project and its documentation are
+preserved below; its Bun/Supabase deployment is separate from this Worker.
+
+# Upstream Nutrition MCP
 
 A remote MCP server for personal nutrition tracking — log meals with calories, macros, fiber, total and added sugar, saturated and trans fat, sodium (with an optional daily ceiling) and caffeine (optionally ingredient by ingredient), look up generic foods in USDA FoodData Central and packaged products by barcode in Open Food Facts, record where each nutrient value came from, save meals you eat often and log them again by name, log water, body weight and body measurements, review nutrition history, and import an existing food diary from another app, all through conversation. Alcohol tracking is opt-in and off by default. The website and the in-chat widgets are available in English, German, Spanish, French, Dutch, Polish, Italian, Ukrainian, Japanese and Turkish; `set_language` picks the widget language.
 

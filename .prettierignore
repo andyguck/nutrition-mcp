@@ -13,3 +13,6 @@ public/map-data.json
 
 # Local Claude Code state — untracked, not ours to format.
 .claude/
+
+# Independent Worker package, checked by its own CI.
+cloudflare/

@@ -31,7 +31,7 @@
         "dev": "bun run gen:all && bun --watch src/index.ts",
         "inspect": "bunx @modelcontextprotocol/inspector",
         "harness": "bun run scripts/widget-harness.ts",
-        "test": "bun test",
+        "test": "bun test ./src ./public/widgets",
         "format": "bunx prettier --write .",
         "format:check": "bunx prettier --check .",
         "typecheck": "bun run scripts/typecheck.ts",

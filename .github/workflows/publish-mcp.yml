@@ -17,6 +17,7 @@ on:
 
 jobs:
     publish:
+        if: github.repository == 'akutishevsky/nutrition-mcp'
         runs-on: ubuntu-latest
         permissions:
             id-token: write # required for OIDC authentication

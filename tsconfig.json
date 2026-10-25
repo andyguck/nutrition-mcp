@@ -1,4 +1,5 @@
 {
+    "exclude": ["cloudflare", "node_modules"],
     "compilerOptions": {
         // Environment setup & latest features
         "lib": ["ESNext"],

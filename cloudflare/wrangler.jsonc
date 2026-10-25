@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "myfood-mcp",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-10-25",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "myfood.andyguck.com", "custom_domain": true }],
+  "vars": {
+    "PUBLIC_ORIGIN": "https://myfood.andyguck.com",
+    "DEFAULT_TIMEZONE": "America/Chicago",
+    "ACCESS_TEAM_DOMAIN": "https://nameless-pond-a236.cloudflareaccess.com",
+    "ACCESS_AUD": ""
+  },
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "myfood-nutrition",
+    "migrations_dir": "migrations"
+  }],
+  "kv_namespaces": [{ "binding": "OAUTH_KV" }],
+  "ratelimits": [{
+    "name": "AUTH_RATE_LIMIT",
+    "namespace_id": "154103",
+    "simple": { "limit": 30, "period": 60 }
+  }],
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "invocation_logs": false }
+  }
+}
