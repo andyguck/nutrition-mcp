@@ -11,7 +11,7 @@
     "PUBLIC_ORIGIN": "https://myfood.andyguck.com",
     "DEFAULT_TIMEZONE": "America/Chicago",
     "ACCESS_TEAM_DOMAIN": "https://nameless-pond-a236.cloudflareaccess.com",
-    "ACCESS_AUD": ""
+    "ACCESS_AUD": "9e460ebce06de18c995a5c38122b6fcff3d4c77523e21c12270dabc20de29d3b"
   },
   "d1_databases": [{
     "binding": "DB",
