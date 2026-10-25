@@ -1,6 +1,8 @@
 # My Food Tracker on Cloudflare
 
-This directory is a household-focused Workers adaptation of [Nutrition MCP](https://github.com/akutishevsky/nutrition-mcp). The intended ChatGPT server URL is **`https://myfood.andyguck.com/mcp`**. Each person connects with their own email and can access only their own records.
+This directory is a household-focused Workers adaptation of [Nutrition MCP](https://github.com/akutishevsky/nutrition-mcp). The deployed ChatGPT server URL is **`https://myfood.andyguck.com/mcp`**. Each person connects with their own email; the Worker scopes food operations to the authenticated account.
+
+Public routing, OAuth discovery and Access sign-in redirects have passed live checks. Each person's first ChatGPT sign-in and authenticated acceptance checks remain to be completed; see [DEPLOYMENT.md](DEPLOYMENT.md). To connect, go directly to [Connect each ChatGPT account](#connect-each-chatgpt-account).
 
 The deployment uses a Worker for Streamable HTTP MCP and OAuth, D1 for nutrition records, Workers KV for OAuth state, and Cloudflare Access email one-time PIN for browser sign-in. It needs no container, Supabase account, always-on computer, or OpenAI API key. The upstream Bun/Supabase application remains at the repository root; its setup instructions and hosted service are separate from this deployment.
 
@@ -18,7 +20,7 @@ A Worker fits the short request/SQL workload and avoids a running container and 
 | Workers KV Free | 100,000 reads/day, 1,000 writes/day, 1 GB storage. OAuth setup/refresh consumes KV operations. |
 | Cloudflare Access Free | Up to 50 users, enough for this two-person deployment. |
 
-Start with existing account entitlements. Paid Workers is the fallback if real requests exceed Free CPU limits; adding this Worker to an already-paid account does not create another $5 subscription. Domain registration and ChatGPT access are separate. Check the account's total usage after onboarding. Pricing checked 2026-10-25: [Workers and KV](https://developers.cloudflare.com/workers/platform/pricing/), [D1](https://developers.cloudflare.com/d1/platform/pricing/), [Access plans](https://www.cloudflare.com/plans/).
+This deployment uses the account's existing **Workers Paid** subscription, confirmed in the Cloudflare dashboard. Adding this Worker did not create another $5 base subscription or change the billing plan; usage remains metered across the account. The Free allowances above are a comparison for a new account, where OAuth and summary CPU usage would need verification. Domain registration and ChatGPT access are separate. Check the account's total usage after onboarding. Pricing checked 2026-10-25: [Workers and KV](https://developers.cloudflare.com/workers/platform/pricing/), [D1](https://developers.cloudflare.com/d1/platform/pricing/), [Access plans](https://www.cloudflare.com/plans/).
 
 ## How sign-in and isolation work
 
@@ -33,7 +35,7 @@ The same hostname serves both accounts. Each person must authorize their own con
 
 ## Deploy
 
-Use Node.js 24.15+ and run commands from this directory. Keep Cloudflare credentials in the host's normal Wrangler login store or secret manager. Do not paste tokens, email PINs, cookies, authorization URLs or real food records into Git, issue reports, build logs or chat.
+Use Node.js 24.15+. Start at the repository root, enter `cloudflare` as shown below, and run the remaining package commands there. Keep Cloudflare credentials in the host's normal Wrangler login store or secret manager. Do not paste tokens, email PINs, cookies, authorization URLs or real food records into Git, issue reports, build logs or chat.
 
 ### 1. Install and validate locally
 
@@ -116,9 +118,12 @@ Record the deployed Worker version and the results. Local tests, a successful de
 
 ## Connect each ChatGPT account
 
-In ChatGPT on the web, open **Plugins**, select **+ → Add custom MCP server**, name it **My Food Tracker**, and enter `https://myfood.andyguck.com/mcp` as the Server URL. Select **OAuth**, review the warning and create the plugin, then install it. The server supports client metadata documents and dynamic client registration; use a supported automatic registration option rather than inventing a client ID/secret. If the UI offers scopes, request `nutrition:read nutrition:write offline_access`. Workspace permissions or security restrictions may limit custom servers. [Official OpenAI setup instructions](https://developers.openai.com/api/docs/guides/custom-mcp-server)
+1. In your own ChatGPT account on the web, open **Plugins → + → Add custom MCP server**.
+2. Name it **My Food Tracker**, enter `https://myfood.andyguck.com/mcp` as the Server URL and select **OAuth**. Use a supported automatic registration option; no manually supplied client ID or secret is needed. If the UI offers scopes, request `nutrition:read nutrition:write offline_access`.
+3. Review the warning, create the plugin and install it. Complete the browser email-PIN flow and approve only when your own email appears on the consent screen.
+4. Ask “Show my profile and timezone,” then complete an agreed test meal using the acceptance checks above. Repeat the setup from the other person's own ChatGPT account.
 
-Follow the browser email-PIN flow and approve only when your own email appears. Repeat from the other person's ChatGPT account. No Cloudflare API token or service token belongs in ChatGPT. OAuth metadata, PKCE and bearer tokens handle the connection. [OpenAI MCP authentication](https://developers.openai.com/plugins/build/auth)
+Workspace permissions or security restrictions may limit custom servers. The server supports client metadata documents and dynamic client registration. No Cloudflare API token or service token belongs in ChatGPT. [Official OpenAI setup instructions](https://developers.openai.com/api/docs/guides/custom-mcp-server), [MCP authentication](https://developers.openai.com/plugins/build/auth).
 
 Refresh tokens are issued only when the client requests and the user approves `offline_access`. Without it, the connection lasts for the one-hour access token and then requires authorization again. Authorization-server metadata advertises this scope; resource metadata and bearer challenges omit it, so verify that ChatGPT includes it when connecting.
 
@@ -130,7 +135,7 @@ Add [project-instructions.md](project-instructions.md) to a ChatGPT project's in
 - “Compare my logged totals with my goals for the last seven days. Mark incomplete days.”
 - “Export my food tracker data, fetching every page.”
 
-If sign-in stalls, first run the public smoke check and inspect Access path coverage. A 503 indicates incomplete authentication configuration; an Access HTML response on `/mcp`, discovery or `/oauth/token` indicates overly broad Access protection. If the wrong diary appears, check the signed-in email and reconnect using a separate browser profile. Never treat a failed tool call or empty result as confirmation that data was saved or deleted.
+If sign-in stalls, first run the public smoke check and inspect Access path coverage. A 503 can indicate missing or malformed authentication settings or a temporary service failure; an Access HTML response on `/mcp`, discovery or `/oauth/token` indicates overly broad Access protection. If the wrong diary appears, check the signed-in email and reconnect using a separate browser profile. Never treat a failed tool call or empty result as confirmation that data was saved or deleted.
 
 ## Data operations
 
