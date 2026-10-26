@@ -1,5 +1,10 @@
 # dependencies (bun install)
 node_modules
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+worker-configuration.d.ts
 
 # output
 out

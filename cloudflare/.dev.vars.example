@@ -1,0 +1,2 @@
+# Copy to .dev.vars for local development. Do not commit real addresses.
+ALLOWED_EMAILS=alice@example.com,bob@example.com
