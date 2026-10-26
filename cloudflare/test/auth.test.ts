@@ -1,5 +1,5 @@
 import { createExecutionContext } from 'cloudflare:test';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT, type JWTVerifyGetKey } from 'jose';
 import {
   handleOAuthRequest, hasScope, READ_SCOPE, readPrincipal, verifyAccessIdentity, WRITE_SCOPE,
@@ -95,7 +95,7 @@ async function connect(env: AuthEnv, options: Parameters<typeof startConsent>[1]
   const exchange = await call(env, '/oauth/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ grant_type: 'authorization_code', client_id: consent.clientId, code: location.searchParams.get('code')!, redirect_uri: CALLBACK, code_verifier: consent.verifier, resource: `${ORIGIN}/mcp` }) });
   expect(exchange.status).toBe(200);
-  const tokens = await exchange.json() as { access_token: string; refresh_token: string; scope: string };
+  const tokens = await exchange.json() as { access_token: string; refresh_token: string; scope: string; expires_in: number };
   return { consent, ...tokens };
 }
 
@@ -211,6 +211,44 @@ describe('OAuth and browser consent', () => {
     const response = await call(env, '/mcp', { headers: { Authorization: `Bearer ${connection.access_token}` } });
     expect(response.status).toBe(200);
     expect((await response.json() as { scopes: string[] }).scopes).toEqual([READ_SCOPE]);
+  });
+
+  it.each([READ_SCOPE, `${READ_SCOPE} ${WRITE_SCOPE} offline_access`])('keeps the original access token valid for 365 days with scopes %s', async (scopes) => {
+    const issuedAt = Math.floor(Date.now() / 1000) * 1000;
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(issuedAt);
+    try {
+      const env = environment();
+      const connection = await connect(env, { scopes });
+      expect(connection.expires_in).toBe(31_536_000);
+      for (const days of [31, 364]) {
+        clock.mockReturnValue(issuedAt + days * 86_400_000);
+        expect((await call(env, '/mcp', { headers: { Authorization: `Bearer ${connection.access_token}` } })).status).toBe(200);
+      }
+      clock.mockReturnValue(issuedAt + 365 * 86_400_000 + 1000);
+      expect((await call(env, '/mcp', { headers: { Authorization: `Bearer ${connection.access_token}` } })).status).toBe(401);
+    } finally { clock.mockRestore(); }
+  });
+
+  it('refreshes after a long idle period without extending the original 365-day grant', async () => {
+    const issuedAt = Math.floor(Date.now() / 1000) * 1000;
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(issuedAt);
+    try {
+      const env = environment();
+      const connection = await connect(env);
+      clock.mockReturnValue(issuedAt + 364 * 86_400_000);
+      const refresh = await call(env, '/oauth/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ grant_type: 'refresh_token', client_id: connection.consent.clientId, refresh_token: connection.refresh_token }) });
+      expect(refresh.status).toBe(200);
+      const refreshed = await refresh.json() as { access_token: string; refresh_token: string; expires_in: number };
+      expect(refreshed.expires_in).toBe(86_400);
+      expect((await call(env, '/mcp', { headers: { Authorization: `Bearer ${refreshed.access_token}` } })).status).toBe(200);
+      clock.mockReturnValue(issuedAt + 365 * 86_400_000 + 1000);
+      expect((await call(env, '/mcp', { headers: { Authorization: `Bearer ${refreshed.access_token}` } })).status).toBe(401);
+      const expired = await call(env, '/oauth/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ grant_type: 'refresh_token', client_id: connection.consent.clientId, refresh_token: refreshed.refresh_token }) });
+      expect(expired.status).toBe(400);
+      expect(await expired.json()).toMatchObject({ error: 'invalid_grant' });
+    } finally { clock.mockRestore(); }
   });
 
   it('never widens read-only scopes from form input or a refresh', async () => {

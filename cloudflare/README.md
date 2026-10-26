@@ -125,7 +125,11 @@ Record the deployed Worker version and the results. Local tests, a successful de
 
 Workspace permissions or security restrictions may limit custom servers. The server supports client metadata documents and dynamic client registration. No Cloudflare API token or service token belongs in ChatGPT. [Official OpenAI setup instructions](https://developers.openai.com/api/docs/guides/custom-mcp-server), [MCP authentication](https://developers.openai.com/plugins/build/auth).
 
-Refresh tokens are issued only when the client requests and the user approves `offline_access`. Without it, the connection lasts for the one-hour access token and then requires authorization again. Authorization-server metadata advertises this scope; resource metadata and bearer challenges omit it, so verify that ChatGPT includes it when connecting.
+New access tokens last **365 days**. The underlying grant also expires 365 days after the initial token exchange; refreshing cannot extend that deadline. Dynamic client registrations last 365 days and renew on eligible token exchanges, so a long idle period does not cause an earlier registration expiry. Disconnect/revocation and removal from the email allowlist can still block a connection before its scheduled expiry.
+
+Refresh tokens are issued only when the client requests and the user approves `offline_access`. Without it, the access token still lasts 365 days, then requires authorization again. Authorization-server metadata advertises this scope; resource metadata and bearer challenges omit it, so verify that ChatGPT includes it when connecting. Deploying a new lifetime does not rewrite existing tokens, grants or registrations: reconnect once to obtain the new lifetime.
+
+OpenAI documents a registered HTTPS callback; this server preserves that validated URI on every client flow. Do not replace it with a guessed app scheme. The consent page expires after 10 minutes, independently of the access token lifetime. If an Android attempt leaves the app requesting reconnection, close stale consent tabs and start one fresh attempt. Web setup is a useful workaround, but successful web authorization does not establish that the Android handoff works.
 
 Add [project-instructions.md](project-instructions.md) to a ChatGPT project's instructions if desired. Example requests:
 

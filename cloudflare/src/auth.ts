@@ -11,6 +11,7 @@ import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from 'jose';
 export const READ_SCOPE = 'nutrition:read';
 export const WRITE_SCOPE = 'nutrition:write';
 export const MCP_SCOPES = [READ_SCOPE, WRITE_SCOPE, 'offline_access'] as const;
+const CONNECTION_TTL_SECONDS = 365 * 24 * 60 * 60;
 
 export interface AuthEnv {
   PUBLIC_ORIGIN: string;
@@ -275,7 +276,10 @@ export async function handleOAuthRequest(
     defaultHandler: { fetch: (authRequest, authEnv) => authorize(authRequest, authEnv as HelperEnv, dependencies) },
     authorizeEndpoint: '/authorize', tokenEndpoint: '/oauth/token', clientRegistrationEndpoint: '/oauth/register',
     clientIdMetadataDocumentEnabled: true,
-    accessTokenTTL: 3600, refreshTokenTTL: 30 * 24 * 3600,
+    accessTokenTTL: CONNECTION_TTL_SECONDS,
+    // Grants and client registrations must not expire before the access token.
+    refreshTokenTTL: CONNECTION_TTL_SECONDS,
+    clientRegistrationTTL: CONNECTION_TTL_SECONDS,
     scopesSupported: [...MCP_SCOPES], requiredScopes: [...MCP_SCOPES],
     resourceMetadata: { resource: `${config.origin}/mcp`, authorization_servers: [config.origin], bearer_methods_supported: ['header'], resource_name: 'My Food Tracker' },
     tokenExchangeCallback: tokenProps,
